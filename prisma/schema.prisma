@@ -13,30 +13,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PaymentMethod {
+  PIX
+  CARTAO
+}
+
+enum PaymentStatus {
+  PENDENTE
+  PARCIAL
+  PAGO
+  CANCELADO
+}
+
 model Registration {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Dados pessoais
   name String
   cpf  String @unique
   rg   String
 
-  // Endereço
   cep          String
   street       String
   number       String
   neighborhood String
   city         String
 
-  // Contato
   email     String
   phone     String
   birthDate String
   emergency String
 
-  // Saúde
   useMedication            Boolean @default(false)
   useMedicationDescription String?
 
@@ -46,11 +54,13 @@ model Registration {
   foodRestriction            Boolean @default(false)
   foodRestrictionDescription String?
 
-  // Termos
-  acceptTheTerms Boolean @default(false)
+  acceptTheTerms Boolean
+  payment        PaymentMethod @default(PIX)
 
-  // Pagamento
-  payment String
+  amountRegistration Decimal? 
+  amountPaid       Decimal?
+  statusPayment PaymentStatus @default(PENDENTE)
+  datePayment   String?
 
   @@index([email])
   @@index([phone])
