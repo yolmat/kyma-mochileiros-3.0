@@ -107,7 +107,7 @@ export default function Home() {
                     <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#E65100]" />
 
                     <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-[#E65100] sm:text-[9px] sm:tracking-[0.2em]">
-                      Encerramento do 1º Lote em
+                      O mochileiros começa em:
                     </span>
 
                   </div>
@@ -125,7 +125,7 @@ export default function Home() {
                   className="hidden group md:flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#E65100] via-amber-600 to-orange-500 px-5 py-3.5 text-center text-xs font-extrabold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(230,81,0,0.4)] transition-all hover:scale-[1.01] hover:shadow-[0_0_35px_rgba(230,81,0,0.5)] active:scale-[0.98] sm:py-4 sm:text-sm"
                 >
                   <span className="flex items-center justify-center gap-2">
-                    GARANTIR VAGA NO LOTE 1
+                    GARANTIR VAGA
 
                     <svg
                       className="h-4 w-4 transition-transform group-hover:translate-x-1"
