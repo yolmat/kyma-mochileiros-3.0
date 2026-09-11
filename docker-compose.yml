@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  db-mochileiros:
+    image: postgres:alpine
+    ports:
+      - "5436:5432"
+    container_name: "db-mochileiros-3.0"
+    restart: always
+    volumes:
+      - ./mochileiros:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: mochileiros
+      POSTGRES_PASSWORD: teste
+      PGDATA: /var/lib/postgresql/data/some_name/
+volumes:
+  db-mochileiros:
