@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Countdown from "../components/countdown";
 
 export default function Home() {
@@ -24,12 +25,12 @@ export default function Home() {
           </a>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <a
-              href="#inscricao"
+            <Link
+              href="/passport"
               className=" rounded-full border border-gray-600 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-200 transition hover:bg-white/10 sm:px-4 sm:text-xs"
             >
               Pré-venda
-            </a>
+            </Link>
           </div>
 
         </div>
@@ -119,8 +120,8 @@ export default function Home() {
               {/* CTA */}
               <div className="mt-3 w-full sm:mt-4">
 
-                <a
-                  href="#inscricao"
+                <Link
+                  href="/passport"
                   className="hidden group md:flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#E65100] via-amber-600 to-orange-500 px-5 py-3.5 text-center text-xs font-extrabold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(230,81,0,0.4)] transition-all hover:scale-[1.01] hover:shadow-[0_0_35px_rgba(230,81,0,0.5)] active:scale-[0.98] sm:py-4 sm:text-sm"
                 >
                   <span className="flex items-center justify-center gap-2">
@@ -140,7 +141,7 @@ export default function Home() {
                       />
                     </svg>
                   </span>
-                </a>
+                </Link>
 
                 <p className="mt-2 text-center text-[9px] tracking-wide text-gray-500 sm:text-[10px]">
                   Inscrições seguras • Confirmação instantânea
@@ -161,12 +162,12 @@ export default function Home() {
         className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-3 md:hidden"
       >
         <div className="mx-auto max-w-md">
-          <a
-            href="#top"
+          <Link
+            href="/passport"
             className="pointer-events-auto block w-full rounded-xl bg-[#E65100] px-4 py-3 text-center text-xs font-extrabold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(230,81,0,0.45)]"
           >
             Garantir minha vaga
-          </a>
+          </Link>
         </div>
       </div>
 
