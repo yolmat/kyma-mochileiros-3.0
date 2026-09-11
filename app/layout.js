@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Mochileiros 3.0 - A Maior Expedição",
-  description: "Mochileiros 3.0 - A Maior Expedição",
+  title: "Mochileiros 3.0",
+  description: "Mochileiros 3.0 - Um evento Kyma",
 };
 
 export default function RootLayout({ children }) {
