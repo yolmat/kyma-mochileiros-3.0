@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDENTE', 'PARCIAL', 'PAGO', 'CANCELADO');
+
 -- CreateTable
 CREATE TABLE "registrations" (
     "id" TEXT NOT NULL,
@@ -21,8 +24,12 @@ CREATE TABLE "registrations" (
     "healthProblemDescription" TEXT,
     "foodRestriction" BOOLEAN NOT NULL DEFAULT false,
     "foodRestrictionDescription" TEXT,
-    "acceptTheTerms" BOOLEAN NOT NULL DEFAULT false,
+    "acceptTheTerms" BOOLEAN NOT NULL,
     "payment" TEXT NOT NULL,
+    "amountRegistration" DECIMAL(65,30),
+    "amountPaid" DECIMAL(65,30),
+    "statusPayment" "PaymentStatus" NOT NULL DEFAULT 'PENDENTE',
+    "datePayment" TEXT,
 
     CONSTRAINT "registrations_pkey" PRIMARY KEY ("id")
 );

@@ -10,7 +10,6 @@ import {
 } from "next/font/google";
 
 import MedicalAndTerms from "../../components/medicalAndTerms";
-import { useRouter } from "next/navigation";
 
 const barlow = Barlow_Condensed({
     subsets: ["latin"],
@@ -139,8 +138,6 @@ export default function CheckoutPage() {
     const [processing, setProcessing] = useState(false);
     const [success, setSuccess] = useState(false);
 
-    const router = useRouter();
-
     const methods = useForm({
         defaultValues: {
             name: "",
@@ -224,6 +221,7 @@ export default function CheckoutPage() {
             setTimeout(() => {
                 window.location.href = `https://api.whatsapp.com/send?phone=5511944593068&text=Eu%20acabei%20de%20me%20inscrever%20no%20mochileiros%20e%20gostaria%20de%20efetuar%20o%20pagamento%20via%20${payment}`;
             }, 3000);
+
         } catch (error) {
             console.error(
                 "Erro ao finalizar inscrição:",
