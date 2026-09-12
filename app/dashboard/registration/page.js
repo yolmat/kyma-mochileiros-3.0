@@ -82,17 +82,17 @@ function maskBirthDate(value = "") {
 }
 
 function maskCurrency(value) {
-    const numbers = String(value).replace(/\D/g, "");
+    const numbers = onlyNumbers(value);
 
     if (!numbers) {
         return "";
     }
 
-    const amount = Number(numbers) / 100;
-
-    return amount.toLocaleString("pt-BR", {
+    return Number(numbers).toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
     });
 }
 
@@ -180,41 +180,405 @@ function PaymentBadge({ payment }) {
 }
 
 function PaymentStatus({ payment }) {
-    const isPix = payment === "PAGO";
 
     return (
+
         <span
+
             className={`
-        inline-flex items-center rounded-full border px-2.5 py-1
-        ${mono.className}
-        text-[9px] font-bold uppercase tracking-wider
-        ${isPix
-                    ? "border-[#4fdbcc]/20 bg-[#4fdbcc]/10 text-[#4fdbcc]"
-                    : "border-[#e0b6ff]/20 bg-[#e0b6ff]/10 text-[#e0b6ff]"
+                inline-flex items-center rounded-full border px-2.5 py-1
+                ${mono.className}
+                text-[9px] font-bold uppercase tracking-wider
+                ${payment === "PAGO"
+                    ? "border-[#4fdbcc]/20 bg-[#4fdbcc]/10 text-[#4fdbcc]" :
+                    payment === "PENDENTE"
+                        ? "border-[#e0b6ff]/20 bg-[#e0b6ff]/10 text-[#e0b6ff]" :
+                        payment === "PARCIAL"
+                            ? "border-[#ffb84d]/20 bg-[#ffb84d]/10 text-[#ffb84d]" :
+                            payment === "CANCELADO"
+                                ? "border-[#ff5c6c]/20 bg-[#ff5c6c]/10 text-[#ff5c6c]" :
+                                "border-[#4fdbcc]/20 bg-[#4fdbcc]/10 text-[#4fdbcc]"
+
                 }
-      `}
-        >
-            {payment || "-"}
+      `}>
+
+            {payment || "teste"}
+            {console.log(payment)}
         </span>
+
     );
+
 }
 
+const EDITABLE_FIELDS = [
+    "E-mail",
+    "Contato de emergência",
+    "CEP",
+    "Rua",
+    "Número",
+    "Bairro",
+    "Cidade",
+    "Valor da Inscrição",
+    "Valor Pago",
+    "Status do pagamento",
+    "Data do Pagamento",
+];
 
-function DetailRow({ label, value }) {
+const PAYMENT_STATUS_OPTIONS = [
+    "PENDENTE",
+    "PARCIAL",
+    "PAGO",
+    "CANCELADO",
+];
+
+function DetailRow({ label, value, onSave }) {
+    const canEdit = EDITABLE_FIELDS.includes(label);
+    const isPaymentStatus = label === "Status do pagamento";
+
+    const [editing, setEditing] = useState(false);
+    const [newValue, setNewValue] = useState(value || "");
+    const [currencyRaw, setCurrencyRaw] = useState("");
+
+    function formatCurrencyFromCents(value) {
+        if (!value) {
+            return "";
+        }
+
+        const cents = Number(value);
+
+        if (!Number.isFinite(cents)) {
+            return "";
+        }
+
+        return (cents / 100).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    }
+
+    function onlyNumbers(value) {
+        return String(value).replace(/\D/g, "");
+    }
+
+    function maskCPF(value) {
+        const numbers = onlyNumbers(value).slice(0, 11);
+
+        return numbers
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d)/, "$1.$2")
+            .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    }
+
+    function maskRG(value) {
+        const characters = String(value)
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .toUpperCase()
+            .slice(0, 9);
+
+        return characters
+            .replace(/(\w{2})(\w)/, "$1.$2")
+            .replace(/(\w{3})(\w)/, "$1.$2")
+            .replace(/(\w{3})(\w)$/, "$1-$2");
+    }
+
+    function maskCEP(value) {
+        const numbers = onlyNumbers(value).slice(0, 8);
+
+        return numbers.replace(
+            /(\d{5})(\d)/,
+            "$1-$2"
+        );
+    }
+
+    function maskPhone(value) {
+        const numbers = onlyNumbers(value).slice(0, 11);
+
+        if (numbers.length <= 2) {
+            return numbers;
+        }
+
+        if (numbers.length <= 7) {
+            return numbers.replace(
+                /(\d{2})(\d+)/,
+                "($1) $2"
+            );
+        }
+
+        return numbers.replace(
+            /(\d{2})(\d)(\d{4})(\d{1,4})/,
+            "($1) $2.$3-$4"
+        );
+    }
+
+    function maskBirthDate(value) {
+        const numbers = onlyNumbers(value).slice(0, 8);
+
+        return numbers
+            .replace(/(\d{2})(\d)/, "$1/$2")
+            .replace(/(\d{2})(\d)/, "$1/$2");
+    }
+
+    function maskCurrency(value) {
+        const numbers = String(value).replace(/\D/g, "");
+
+        if (!numbers) {
+            return "";
+        }
+
+        return Number(numbers).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+        });
+    }
+    function getMask() {
+        switch (label) {
+            case "CPF":
+                return maskCPF;
+
+            case "RG":
+                return maskRG;
+
+            case "CEP":
+                return maskCEP;
+
+            case "Telefone":
+            case "Contato de emergência":
+                return maskPhone;
+
+            case "Data de nascimento":
+            case "Data do Pagamento":
+                return maskBirthDate;
+
+            case "Valor da Inscrição":
+            case "Valor Pago":
+                return maskCurrency;
+
+            default:
+                return null;
+        }
+    }
+
+    function getUnmaskedValue(value) {
+        switch (label) {
+            case "CPF":
+            case "CEP":
+            case "Telefone":
+            case "Data de nascimento":
+            case "Nascimento":
+                return onlyNumbers(value);
+
+            case "RG":
+                return String(value)
+                    .replace(/[.\-\s]/g, "")
+                    .toUpperCase();
+
+            case "Valor da Inscrição":
+            case "Valor Pago": {
+                if (
+                    label === "Valor da Inscrição" ||
+                    label === "Valor Pago"
+                ) {
+                    if (!currencyRaw) {
+                        return null;
+                    }
+
+                    return Number(currencyRaw) / 100;
+                }
+            }
+
+            default:
+                return value;
+        }
+    }
+
+    function handleEdit() {
+
+        if (isPaymentStatus) {
+            setNewValue(value || "PENDENTE");
+            setEditing(true);
+            return;
+        }
+
+        const isCurrency =
+            label === "Valor da Inscrição" ||
+            label === "Valor Pago";
+
+        if (isCurrency) {
+            if (value === null || value === undefined || value === "") {
+                setCurrencyRaw("");
+                setNewValue("");
+            } else {
+                const numericValue = Number(value);
+
+                if (Number.isFinite(numericValue)) {
+                    const cents = String(
+                        Math.round(numericValue * 100)
+                    );
+
+                    setCurrencyRaw(cents);
+                    setNewValue(
+                        formatCurrencyFromCents(cents)
+                    );
+                } else {
+                    setCurrencyRaw("");
+                    setNewValue("");
+                }
+            }
+
+            setEditing(true);
+            return;
+        }
+
+        const mask = getMask();
+
+        setNewValue(
+            mask
+                ? mask(value || "")
+                : value || ""
+        );
+
+        setEditing(true);
+    }
+
+    async function handleSave() {
+        const valueToSave = getUnmaskedValue(newValue);
+
+        await onSave(valueToSave);
+
+        setEditing(false);
+    }
+
+    function handleChange(event) {
+        const isCurrency =
+            label === "Valor da Inscrição" ||
+            label === "Valor Pago";
+
+        if (isCurrency) {
+            const inputType = event.nativeEvent.inputType;
+            const data = event.nativeEvent.data;
+
+            let raw = currencyRaw;
+
+            // Digitação de número
+            if (inputType === "insertText" && data && /\d/.test(data)) {
+                raw += data;
+            }
+
+            // Backspace
+            else if (inputType === "deleteContentBackward") {
+                raw = raw.slice(0, -1);
+            }
+
+            // Delete
+            else if (inputType === "deleteContentForward") {
+                raw = raw.slice(0, -1);
+            }
+
+            // Colar
+            else if (inputType === "insertFromPaste") {
+                const pasted = event.target.value
+                    .replace(/\D/g, "");
+
+                raw = pasted;
+            }
+
+            setCurrencyRaw(raw);
+
+            if (!raw) {
+                setNewValue("");
+                return;
+            }
+
+            setNewValue(
+                formatCurrencyFromCents(raw)
+            );
+
+            return;
+        }
+
+        const value = event.target.value;
+        const mask = getMask();
+
+        setNewValue(
+            mask ? mask(value) : value
+        );
+    }
+
+    function getDisplayValue() {
+        if (!value) {
+            return "-";
+        }
+
+        const mask = getMask();
+
+        return mask
+            ? mask(value)
+            : value;
+    }
+
     return (
         <div className="border-b border-white/5 py-3 last:border-0">
-            <p
-                className={`${mono.className} mb-1 text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
-            >
-                {label}
-            </p>
+            <div className="flex items-center justify-between gap-4">
+                <p
+                    className={`${mono.className} mb-1 text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
+                >
+                    {label}
+                </p>
 
-            <p className="text-sm text-[#e4e1e7]">
-                {value || "-"}
-            </p>
+                {!editing && canEdit && (
+                    <button
+                        type="button"
+                        onClick={handleEdit}
+                        className="text-[9px] uppercase tracking-wider text-[#ff7a00] transition hover:text-[#ff9a3d]"
+                    >
+                        Editar
+                    </button>
+                )}
+
+                {editing && (
+                    <button
+                        type="button"
+                        onClick={handleSave}
+                        className="text-[9px] uppercase tracking-wider text-[#4fdbcc] transition hover:text-[#72e8dc]"
+                    >
+                        Salvar
+                    </button>
+                )}
+            </div>
+
+            {editing ? (
+                isPaymentStatus ? (
+                    <select
+                        value={newValue}
+                        onChange={(event) => setNewValue(event.target.value)}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-[#1b1b1f] px-3 py-2 text-sm text-[#e4e1e7] outline-none transition focus:border-[#ff7a00]/50"
+                    >
+                        {PAYMENT_STATUS_OPTIONS.map((status) => (
+                            <option key={status} value={status}>
+                                {status}
+                            </option>
+                        ))}
+                    </select>
+                ) : (
+                    <input
+                        type="text"
+                        value={newValue}
+                        onChange={handleChange}
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-[#e4e1e7] outline-none transition focus:border-[#ff7a00]/50"
+                    />
+                )
+            ) : (
+                <p className="text-sm text-[#e4e1e7]">
+                    {getDisplayValue()}
+                </p>
+            )}
         </div>
     );
+
 }
+
 
 /* =========================================================
    PAGE
@@ -249,12 +613,19 @@ export default function RegistrationsPage() {
                 );
             }
 
-            setRegistrations(result.data || []);
+            const updatedRegistrations = result.data || [];
+
+            setRegistrations(updatedRegistrations);
+
+            return updatedRegistrations;
         } catch (error) {
             console.error("Erro ao carregar inscrições:", error);
+
             setError(
                 error.message || "Erro ao carregar as inscrições."
             );
+
+            return null;
         } finally {
             setLoading(false);
         }
@@ -276,7 +647,7 @@ export default function RegistrationsPage() {
         return registrations.filter((registration) => {
             const matchesPayment =
                 paymentFilter === "TODOS" ||
-                registration.payment === paymentFilter;
+                registration.statusPayment === paymentFilter;
 
             if (!matchesPayment) {
                 return false;
@@ -334,6 +705,47 @@ export default function RegistrationsPage() {
         );
     }).length;
 
+    async function handleUpdateField(id, field, value) {
+        try {
+            const response = await fetch("/api/registrations", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    id,
+                    field,
+                    value,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "Erro ao atualizar inscrição."
+                );
+            }
+
+            console.log("Atualizado:", data);
+
+            // Recarrega os dados do banco
+            const updatedRegistrations = await loadRegistrations();
+
+            // Atualiza também os dados exibidos no modal
+            if (updatedRegistrations) {
+                const updatedRegistration = updatedRegistrations.find(
+                    (registration) => registration.id === id
+                );
+
+                if (updatedRegistration) {
+                    setSelectedRegistration(updatedRegistration);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
     return (
         <main
             className={`${geist.className} min-h-screen bg-[#131317] text-[#e4e1e7]`}
@@ -467,17 +879,22 @@ export default function RegistrationsPage() {
                                 TODOS OS PAGAMENTOS
                             </option>
 
-                            <option value="PIX">
-                                PIX
+                            <option value="PAGO">
+                                PAGO
                             </option>
 
-                            <option value="CARTAO">
-                                CARTÃO
+                            <option value="PENDENTE">
+                                PENDENTE
                             </option>
 
-                            <option value="CARTÃO">
-                                CARTÃO
+                            <option value="PARCIAL">
+                                PARCIAL
                             </option>
+
+                            <option value="CANCELADO">
+                                CANCELADO
+                            </option>
+
                         </select>
                     </div>
                 </section>
@@ -549,7 +966,7 @@ export default function RegistrationsPage() {
                                     <th
                                         className={`${mono.className} px-5 py-4 text-left text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
                                     >
-                                        Data do pagamento
+                                        Status do Pagamento
                                     </th>
 
                                     <th className="px-5 py-4" />
@@ -635,9 +1052,9 @@ export default function RegistrationsPage() {
                                                     <span
                                                         className={`${mono.className} text-[10px] text-[#e0c0af]/55`}
                                                     >
-                                                        {formatDate(
-                                                            registration.datePayment
-                                                        )}
+                                                        <PaymentStatus
+                                                            payment={registration.statusPayment}
+                                                        />
                                                     </span>
                                                 </td>
 
@@ -771,8 +1188,8 @@ export default function RegistrationsPage() {
             </div>
 
             {/* =====================================================
-          DETAILS MODAL
-      ===================================================== */}
+                DETAILS MODAL
+            ===================================================== */}
 
             {selectedRegistration && (
                 <div
@@ -838,6 +1255,10 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.name
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "name", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -845,6 +1266,10 @@ export default function RegistrationsPage() {
                                             value={maskCPF(
                                                 selectedRegistration.cpf
                                             )}
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "cpf", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -852,6 +1277,10 @@ export default function RegistrationsPage() {
                                             value={maskRG(
                                                 selectedRegistration.rg
                                             )}
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "rg", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -859,6 +1288,10 @@ export default function RegistrationsPage() {
                                             value={maskBirthDate(
                                                 selectedRegistration.birthDate
                                             )}
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "birthDate", newValue)
+                                            }
+
                                         />
                                     </div>
                                 </div>
@@ -878,6 +1311,10 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.email
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "email", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -885,6 +1322,10 @@ export default function RegistrationsPage() {
                                             value={maskPhone(
                                                 selectedRegistration.phone
                                             )}
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "phone", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -892,6 +1333,10 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.emergency
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "emergency", newValue)
+                                            }
+
                                         />
                                     </div>
                                 </div>
@@ -911,6 +1356,10 @@ export default function RegistrationsPage() {
                                             value={maskCEP(
                                                 selectedRegistration.cep
                                             )}
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "name", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -918,6 +1367,10 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.street
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "street", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -925,6 +1378,10 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.number
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "number", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -932,6 +1389,10 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.neighborhood
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "neighborhood", newValue)
+                                            }
+
                                         />
 
                                         <DetailRow
@@ -939,6 +1400,10 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.city
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "city", newValue)
+                                            }
+
                                         />
                                     </div>
                                 </div>
@@ -972,7 +1437,55 @@ export default function RegistrationsPage() {
                                             value={
                                                 selectedRegistration.id
                                             }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "id", newValue)
+                                            }
+
                                         />
+
+                                        <DetailRow
+                                            label="Valor da Inscrição"
+                                            value={
+                                                selectedRegistration.amountRegistration
+                                            }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "amountRegistration", newValue)
+                                            }
+                                        />
+
+                                        <DetailRow
+                                            label="Valor Pago"
+                                            value={
+                                                selectedRegistration.amountPaid
+                                            }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "amountPaid", newValue)
+                                            }
+
+                                        />
+
+                                        <DetailRow
+                                            label="Status do pagamento"
+                                            value={
+                                                selectedRegistration.statusPayment
+                                            }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "statusPayment", newValue)
+                                            }
+
+                                        />
+
+                                        <DetailRow
+                                            label="Data do Pagamento"
+                                            value={
+                                                selectedRegistration.datePayment
+                                            }
+                                            onSave={(newValue) =>
+                                                handleUpdateField(selectedRegistration.id, "datePayment", newValue)
+                                            }
+
+                                        />
+
                                     </div>
                                 </div>
 

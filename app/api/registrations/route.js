@@ -220,3 +220,185 @@ export async function GET() {
         );
     }
 }
+
+export async function PATCH(request) {
+    try {
+        const body = await request.json();
+
+        const { id, field, value } = body;
+
+        if (!id) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "ID da inscrição não informado.",
+                },
+                { status: 400 }
+            );
+        }
+
+        if (!field) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Campo não informado.",
+                },
+                { status: 400 }
+            );
+        }
+
+        const allowedFields = [
+            "name",
+            "cpf",
+            "rg",
+            "cep",
+            "street",
+            "number",
+            "neighborhood",
+            "city",
+            "email",
+            "phone",
+            "birthDate",
+            "emergency",
+            "useMedication",
+            "useMedicationDescription",
+            "healthProblem",
+            "healthProblemDescription",
+            "foodRestriction",
+            "foodRestrictionDescription",
+            "acceptTheTerms",
+            "payment",
+            "amountRegistration",
+            "amountPaid",
+            "statusPayment",
+            "datePayment",
+        ];
+
+        if (!allowedFields.includes(field)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Campo não permitido para alteração.",
+                },
+                { status: 400 }
+            );
+        }
+
+        if (value === undefined) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Valor não informado.",
+                },
+                { status: 400 }
+            );
+        }
+
+        let parsedValue = value;
+
+        if (
+            field === "amountRegistration" ||
+            field === "amountPaid"
+        ) {
+            parsedValue = Number(value);
+
+            if (Number.isNaN(parsedValue)) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: "Valor monetário inválido.",
+                    },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (
+            field === "useMedication" ||
+            field === "healthProblem" ||
+            field === "foodRestriction" ||
+            field === "acceptTheTerms"
+        ) {
+            parsedValue = Boolean(value);
+        }
+
+        if (field === "payment") {
+            if (value !== "PIX" && value !== "CARTAO") {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: "Forma de pagamento inválida.",
+                    },
+                    { status: 400 }
+                );
+            }
+        }
+
+        if (field === "statusPayment") {
+            const allowedStatuses = [
+                "PENDENTE",
+                "PARCIAL",
+                "PAGO",
+                "CANCELADO",
+            ];
+
+            if (!allowedStatuses.includes(value)) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: "Status de pagamento inválido.",
+                    },
+                    { status: 400 }
+                );
+            }
+        }
+
+        const registration = await prisma.registration.update({
+            where: {
+                id,
+            },
+            data: {
+                [field]: parsedValue,
+            },
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: "Inscrição atualizada com sucesso.",
+            data: registration,
+        });
+
+    } catch (error) {
+        console.error("Erro ao atualizar inscrição:", error);
+
+        if (error.code === "P2025") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Inscrição não encontrada.",
+                },
+                { status: 404 }
+            );
+        }
+
+        if (error.code === "P2002") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: "Já existe uma inscrição com esse valor.",
+                },
+                { status: 409 }
+            );
+        }
+
+        return NextResponse.json(
+            {
+                success: false,
+                error: "Erro ao atualizar inscrição.",
+                details: error.message,
+            },
+            { status: 500 }
+        );
+    }
+
+}
