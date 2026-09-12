@@ -97,7 +97,7 @@ export async function POST(request) {
                 : "PIX";
 
         const registration =
-            await prisma.registration.create({
+            await prisma.registrations.create({
                 data: {
                     name,
                     cpf: cleanCpf,

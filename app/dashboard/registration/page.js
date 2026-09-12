@@ -81,6 +81,21 @@ function maskBirthDate(value = "") {
         .replace(/(\d{2})(\d)/, "$1/$2");
 }
 
+function maskCurrency(value) {
+    const numbers = String(value).replace(/\D/g, "");
+
+    if (!numbers) {
+        return "";
+    }
+
+    const amount = Number(numbers) / 100;
+
+    return amount.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+    });
+}
+
 function formatDate(value) {
     if (!value) return "-";
 
@@ -163,6 +178,27 @@ function PaymentBadge({ payment }) {
         </span>
     );
 }
+
+function PaymentStatus({ payment }) {
+    const isPix = payment === "PAGO";
+
+    return (
+        <span
+            className={`
+        inline-flex items-center rounded-full border px-2.5 py-1
+        ${mono.className}
+        text-[9px] font-bold uppercase tracking-wider
+        ${isPix
+                    ? "border-[#4fdbcc]/20 bg-[#4fdbcc]/10 text-[#4fdbcc]"
+                    : "border-[#e0b6ff]/20 bg-[#e0b6ff]/10 text-[#e0b6ff]"
+                }
+      `}
+        >
+            {payment || "-"}
+        </span>
+    );
+}
+
 
 function DetailRow({ label, value }) {
     return (
@@ -489,18 +525,6 @@ export default function RegistrationsPage() {
                                     <th
                                         className={`${mono.className} px-5 py-4 text-left text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
                                     >
-                                        CPF
-                                    </th>
-
-                                    <th
-                                        className={`${mono.className} px-5 py-4 text-left text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
-                                    >
-                                        Cidade
-                                    </th>
-
-                                    <th
-                                        className={`${mono.className} px-5 py-4 text-left text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
-                                    >
                                         Telefone
                                     </th>
 
@@ -513,7 +537,19 @@ export default function RegistrationsPage() {
                                     <th
                                         className={`${mono.className} px-5 py-4 text-left text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
                                     >
-                                        Inscrição
+                                        Valor da Inscrição
+                                    </th>
+
+                                    <th
+                                        className={`${mono.className} px-5 py-4 text-left text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
+                                    >
+                                        Valor Pago
+                                    </th>
+
+                                    <th
+                                        className={`${mono.className} px-5 py-4 text-left text-[9px] uppercase tracking-[0.15em] text-[#e0c0af]/45`}
+                                    >
+                                        Data do pagamento
                                     </th>
 
                                     <th className="px-5 py-4" />
@@ -568,23 +604,7 @@ export default function RegistrationsPage() {
                                                     <span
                                                         className={`${mono.className} text-xs text-[#e0c0af]/75`}
                                                     >
-                                                        {maskCPF(registration.cpf)}
-                                                    </span>
-                                                </td>
-
-                                                <td className="px-5 py-4">
-                                                    <span className="text-sm text-[#e0c0af]/75">
-                                                        {registration.city || "-"}
-                                                    </span>
-                                                </td>
-
-                                                <td className="px-5 py-4">
-                                                    <span
-                                                        className={`${mono.className} text-xs text-[#e0c0af]/75`}
-                                                    >
-                                                        {maskPhone(
-                                                            registration.phone
-                                                        )}
+                                                        {maskPhone(registration.phone)}
                                                     </span>
                                                 </td>
 
@@ -596,10 +616,27 @@ export default function RegistrationsPage() {
 
                                                 <td className="px-5 py-4">
                                                     <span
+                                                        className={`${mono.className} text-xs text-[#e0c0af]/75`}
+                                                    >
+                                                        {maskCurrency(registration.amountRegistration == null ? 0 : registration.amountRegistration)}
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <span
+                                                        className={`${mono.className} text-xs text-[#e0c0af]/75`}
+                                                    >
+                                                        {maskCurrency(registration.amountPaid == null ? 0 : registration.amountPaid)}
+                                                    </span>
+
+                                                </td>
+
+                                                <td className="px-5 py-4">
+                                                    <span
                                                         className={`${mono.className} text-[10px] text-[#e0c0af]/55`}
                                                     >
                                                         {formatDate(
-                                                            registration.createdAt
+                                                            registration.datePayment
                                                         )}
                                                     </span>
                                                 </td>
@@ -613,15 +650,15 @@ export default function RegistrationsPage() {
                                                             )
                                                         }
                                                         className={`
-                              rounded-lg border border-white/7
-                              px-3 py-2
-                              ${mono.className}
-                              text-[9px] uppercase tracking-wider
-                              text-[#e0c0af]/65
-                              transition
-                              hover:border-[#ff7a00]/30
-                              hover:text-[#ff7a00]
-                            `}
+                                                            rounded-lg border border-white/7
+                                                            px-3 py-2
+                                                            ${mono.className}
+                                                            text-[9px] uppercase tracking-wider
+                                                            text-[#e0c0af]/65
+                                                            transition
+                                                            hover:border-[#ff7a00]/30
+                                                            hover:text-[#ff7a00]
+                                                            `}
                                                     >
                                                         DETALHES
                                                     </button>
@@ -636,8 +673,8 @@ export default function RegistrationsPage() {
                 </section>
 
                 {/* =================================================
-            MOBILE CARDS
-        ================================================= */}
+                    MOBILE CARDS
+                ================================================= */}
 
                 <section className="space-y-3 md:hidden">
                     {loading ? (
@@ -680,7 +717,7 @@ export default function RegistrationsPage() {
                                     </div>
 
                                     <PaymentBadge
-                                        payment={registration.payment}
+                                        payment={registration.statusPayment}
                                     />
                                 </div>
 

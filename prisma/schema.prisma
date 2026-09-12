@@ -55,12 +55,12 @@ model Registration {
   foodRestrictionDescription String?
 
   acceptTheTerms Boolean
-  payment        PaymentMethod @default(PIX)
+  payment        String
 
-  amountRegistration Decimal? 
-  amountPaid       Decimal?
-  statusPayment PaymentStatus @default(PENDENTE)
-  datePayment   String?
+  amountRegistration Decimal?
+  amountPaid         Decimal?
+  statusPayment      PaymentStatus @default(PENDENTE)
+  datePayment        String?
 
   @@index([email])
   @@index([phone])
